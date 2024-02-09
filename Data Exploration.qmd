@@ -1,0 +1,50 @@
+---
+author: "Ryan Bolen"
+title: "Clean Data"
+format: 
+  docx: 
+    echo: true
+    message: false
+editor: visual
+---
+
+## Libraries
+
+In the following code chunk, load all the libraries you will need:
+
+```{r}
+library(tidyverse)
+library(fixest)
+library(rio)
+library(lubridate)
+
+
+```
+
+```{r}
+trends_up_to_list <- list.files(pattern = 'trends_up_to_')
+
+```
+
+```{r}
+D1 <- import_list(trends_up_to_list,rbind = TRUE)
+```
+
+```{r}
+# Get the first ten characters out of the month or week column which at the moment is a string. 
+
+# Change the date string to an actual date and then floor it to the first day of the month.
+
+D1 <- D1 %>% mutate(monthorweek2 = str_sub(monthorweek,end = 10)) %>% 
+  mutate(first_day_of_month = ymd(monthorweek2)) %>% mutate(first_day_of_month = floor_date(first_day_of_month,unit= 'month'))
+
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
