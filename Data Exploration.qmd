@@ -27,7 +27,7 @@ trends_up_to_list <- list.files(pattern = 'trends_up_to_')
 ```
 
 ```{r}
-D1 <- import_list(trends_up_to_list,rbind = TRUE)
+trends_up_to <- import_list(trends_up_to_list,rbind = TRUE)
 ```
 
 ```{r}
@@ -35,16 +35,52 @@ D1 <- import_list(trends_up_to_list,rbind = TRUE)
 
 # Change the date string to an actual date and then floor it to the first day of the month.
 
-D1 <- D1 %>% mutate(monthorweek2 = str_sub(monthorweek,end = 10)) %>% 
-  mutate(first_day_of_month = ymd(monthorweek2)) %>% mutate(first_day_of_month = floor_date(first_day_of_month,unit= 'month'))
+trends_up_to <- trends_up_to %>% 
+  mutate(monthorweek2 = str_sub(monthorweek,end = 10)) %>% 
+  mutate(first_day_of_month = ymd(monthorweek2)) %>% 
+  mutate(first_day_of_month = floor_date(first_day_of_month,unit= 'month'))
 
 
 ```
 
 ```{r}
 
+# Standardize the index variable by school name
+
+trends_up_to <- trends_up_to %>% group_by(schname,keyword) %>% mutate(std_key = (index -mean(index))/sd(index))
 ```
 
 ```{r}
 
+# Summarize to keyword and month level
+
+trends_up_to <- trends_up_to %>% group_by(first_day_of_month,schname) %>% summarize(tot = sum(std_key))
+```
+
+```{r}
+
+# Read in the scorecard data
+
+SC <- import('Most+Recent+Cohorts+(Scorecard+Elements).csv')
+
+# Read in the id name link data
+
+id_name_link <- import('id_name_link.csv')
+```
+
+```{r}
+# count how many times each school name pops up in id_name_link filter out any rows where n > 1
+
+id_name_link <- id_name_link %>% group_by(schname) %>% mutate(n = n()) %>% filter(n == 1)
+
+```
+
+```{r}
+# Merge data sets - inner join trends up to (D2) on id_name_link that we summarised.
+
+trends_up_to <- trends_up_to %>% inner_join(id_name_link, join_by(schname)) 
+
+SC <- SC %>% mutate(opeid = OPEID)
+
+clean_data <- trends_up_to %>% inner_join(SC, join_by(opeid))
 ```
