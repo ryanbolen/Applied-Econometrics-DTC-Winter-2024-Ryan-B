@@ -22,12 +22,14 @@ library(lubridate)
 ```
 
 ```{r}
+# Getting all trends up to files in a list to pass to import/merge.
+
 trends_up_to_list <- list.files(pattern = 'trends_up_to_')
 
 ```
 
 ```{r}
-trends_up_to <- import_list(trends_up_to_list,rbind = TRUE)
+trends_up_to <- import_list(trends_up_to_list,rbind = TRUE, fill = TRUE)
 ```
 
 ```{r}
@@ -37,8 +39,9 @@ trends_up_to <- import_list(trends_up_to_list,rbind = TRUE)
 
 trends_up_to <- trends_up_to %>% 
   mutate(monthorweek2 = str_sub(monthorweek,end = 10)) %>% 
-  mutate(first_day_of_month = ymd(monthorweek2)) %>% 
-  mutate(first_day_of_month = floor_date(first_day_of_month,unit= 'month'))
+  mutate(monthorweek2 = ymd(monthorweek2)) %>% 
+  mutate(first_day_of_month = floor_date(monthorweek2,unit= 'month'))
+
 
 
 ```
@@ -47,12 +50,12 @@ trends_up_to <- trends_up_to %>%
 
 # Standardize the index variable by school name
 
-trends_up_to <- trends_up_to %>% group_by(schname,keyword) %>% mutate(std_key = (index -mean(index))/sd(index))
+trends_up_to <- trends_up_to %>% group_by(schname,keyword) %>% mutate(std_key = (index -mean(index,na.rm = TRUE))/sd(index,na.rm = TRUE))
 ```
 
 ```{r}
 
-# Summarize to keyword and month level
+# Summarize to school name and month level
 
 trends_up_to <- trends_up_to %>% group_by(first_day_of_month,schname) %>% summarize(tot = sum(std_key))
 ```
@@ -83,4 +86,28 @@ trends_up_to <- trends_up_to %>% inner_join(id_name_link, join_by(schname))
 SC <- SC %>% mutate(opeid = OPEID)
 
 clean_data <- trends_up_to %>% inner_join(SC, join_by(opeid))
+
+
+```
+
+```{r}
+# Need to look at data before September 2015 (before card was released) and after September 2015 (after it was released)
+
+# Vars that might be good to control for:
+
+# Admission Rate 'ADM_RATE'
+# Percentage of students who are financially independent 'DEP_STAT_PCT_IND'
+# 
+
+# Dependent Variable of choice
+# Mean earnings of students working and not enrolled 8 years after entry 'mn_earn_wne_p8'
+```
+
+```{r}
+
+# Getting frame with only colleges that grant bachelor's degrees using PREDDEG variable equal to 3
+
+bach_degree_school_data <- clean_data %>% filter(PREDDEG == 3)
+
+
 ```
