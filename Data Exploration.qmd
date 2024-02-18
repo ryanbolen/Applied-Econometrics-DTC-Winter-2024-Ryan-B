@@ -17,6 +17,7 @@ library(tidyverse)
 library(fixest)
 library(rio)
 library(lubridate)
+library(ggplot2)
 
 
 ```
@@ -41,8 +42,6 @@ trends_up_to <- trends_up_to %>%
   mutate(monthorweek2 = str_sub(monthorweek,end = 10)) %>% 
   mutate(monthorweek2 = ymd(monthorweek2)) %>% 
   mutate(first_day_of_month = floor_date(monthorweek2,unit= 'month'))
-
-
 
 ```
 
@@ -96,18 +95,66 @@ clean_data <- trends_up_to %>% inner_join(SC, join_by(opeid))
 # Vars that might be good to control for:
 
 # Admission Rate 'ADM_RATE'
-# Percentage of students who are financially independent 'DEP_STAT_PCT_IND'
-# 
+# Percentage of students who are financially independent 'DEP_STAT_PCT_IND' - CANNNOT FIND
+# Dependent Variable of choice - CANNOT FIND
+# Mean earnings of students working and not enrolled 10 years after entry 'mn_earn_wne_p10'
+# Graduation rate (on time is considered 6 years) - C150_4_POOLED_SUPP-REPORTED-GRAD-RATE
+# Annual cost of going (average) - NPT4_PUB-AVERAGE-ANNUAL-COST
 
-# Dependent Variable of choice
-# Mean earnings of students working and not enrolled 8 years after entry 'mn_earn_wne_p8'
+# a one-unit change in the standardized index can be understood and interpreted as a one-standard-deviation change in search interest
+
+
+
 ```
 
 ```{r}
 
 # Getting frame with only colleges that grant bachelor's degrees using PREDDEG variable equal to 3
 
+bach_degree_school_data <- clean_data
+
 bach_degree_school_data <- clean_data %>% filter(PREDDEG == 3)
 
+bach_degree_school_data <- bach_degree_school_data %>% select(first_day_of_month,`md_earn_wne_p10-REPORTED-EARNINGS`,schname,tot,unitid,opeid,PREDDEG,`C150_4_POOLED_SUPP-REPORTED-GRAD-RATE`,`NPT4_PUB-AVERAGE-ANNUAL-COST`)
 
+bach_degree_school_data <- bach_degree_school_data %>% mutate(mnth = month(first_day_of_month))
+
+# Filter to only get schools where med earnings is reported
+
+bach_degree_school_data <- bach_degree_school_data %>% filter(`md_earn_wne_p10-REPORTED-EARNINGS` != 'PrivacySuppressed')
+
+bach_degree_school_data <- bach_degree_school_data %>% filter(`md_earn_wne_p10-REPORTED-EARNINGS` != 'NULL')
+
+
+# Variable for high earnings and low earnings school - used 75K (might change to 75th percentile)
+
+median_earnings <- 48100
+
+# Changing earnings to numeric
+
+bach_degree_school_data <- bach_degree_school_data %>% mutate(earnings = as.numeric(`md_earn_wne_p10-REPORTED-EARNINGS`))
+
+# Creating a var to call out high and low earnings schools
+
+bach_degree_school_data <- bach_degree_school_data %>% mutate(high_earnings_school = earnings >= median_earnings)
+
+```
+
+```{r}
+# Creating a var for before and after scorecard (first day of month greater or equal to september 2015)
+
+bach_degree_school_data <- bach_degree_school_data %>% mutate(after_sc = ymd(first_day_of_month) >= ymd('2015-09-01'))
+
+quantile(bach_degree_school_data$earnings,type= 9)
+
+```
+
+```{r}
+model1 <- feols(tot~after_sc,data = bach_degree_school_data)
+etable(model1)
+```
+
+```{r}
+#(dependent) = (independent) + (control1) + (control2)
+# tot = score_card_introduced 
 ```
