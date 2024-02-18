@@ -18,9 +18,17 @@ library(fixest)
 library(rio)
 library(lubridate)
 library(ggplot2)
-
+library(scales)
 
 ```
+
+**Research Question:**
+
+The College Scorecard was released at the start of September 2015. **Among colleges that predominantly grant bachelor\'s degrees**, did the release of the Scorecard shift student interest to high-earnings colleges relative to low-earnings ones (as proxied by Google searches for keywords associated with those colleges)? 
+
+**Data:** 
+
+	Data for this project was pulled from Google Trends which measures the number of internet searches made for a particular school and the College Scorecard where different variables related to enrollment, post graduate earnings, cost of attendance etc. are available for download and analysis.  
 
 ```{r}
 # Getting all trends up to files in a list to pass to import/merge.
@@ -30,6 +38,8 @@ trends_up_to_list <- list.files(pattern = 'trends_up_to_')
 ```
 
 ```{r}
+# Import all trends_up_to files and bind them into a data frame
+
 trends_up_to <- import_list(trends_up_to_list,rbind = TRUE, fill = TRUE)
 ```
 
@@ -56,7 +66,7 @@ trends_up_to <- trends_up_to %>% group_by(schname,keyword) %>% mutate(std_key = 
 
 # Summarize to school name and month level
 
-trends_up_to <- trends_up_to %>% group_by(first_day_of_month,schname) %>% summarize(tot = sum(std_key))
+trends_up_to <- trends_up_to %>% group_by(first_day_of_month,schname) %>% summarize(standardized_searches = sum(std_key))
 ```
 
 ```{r}
@@ -107,6 +117,8 @@ clean_data <- trends_up_to %>% inner_join(SC, join_by(opeid))
 
 ```
 
+A
+
 ```{r}
 
 # Getting frame with only colleges that grant bachelor's degrees using PREDDEG variable equal to 3
@@ -115,7 +127,7 @@ bach_degree_school_data <- clean_data
 
 bach_degree_school_data <- clean_data %>% filter(PREDDEG == 3)
 
-bach_degree_school_data <- bach_degree_school_data %>% select(first_day_of_month,`md_earn_wne_p10-REPORTED-EARNINGS`,schname,tot,unitid,opeid,PREDDEG,`C150_4_POOLED_SUPP-REPORTED-GRAD-RATE`,`NPT4_PUB-AVERAGE-ANNUAL-COST`)
+bach_degree_school_data <- bach_degree_school_data %>% select(first_day_of_month,`md_earn_wne_p10-REPORTED-EARNINGS`,schname,standardized_searches,unitid,opeid,PREDDEG,`C150_4_POOLED_SUPP-REPORTED-GRAD-RATE`,`NPT4_PUB-AVERAGE-ANNUAL-COST`)
 
 bach_degree_school_data <- bach_degree_school_data %>% mutate(mnth = month(first_day_of_month))
 
@@ -125,14 +137,20 @@ bach_degree_school_data <- bach_degree_school_data %>% filter(`md_earn_wne_p10-R
 
 bach_degree_school_data <- bach_degree_school_data %>% filter(`md_earn_wne_p10-REPORTED-EARNINGS` != 'NULL')
 
+# Detirmining how the median earnings values are distributed. 
+
+quantile(bach_degree_school_data$earnings,type= 9)
 
 # Variable for high earnings and low earnings school - used 75K (might change to 75th percentile)
 
-median_earnings <- 48100
+median_earnings <- 50000
 
-# Changing earnings to numeric
+# Changing earnings and cost of attendance to numeric
 
 bach_degree_school_data <- bach_degree_school_data %>% mutate(earnings = as.numeric(`md_earn_wne_p10-REPORTED-EARNINGS`))
+
+
+bach_degree_school_data <- bach_degree_school_data %>% mutate(avg_cost = as.numeric(`NPT4_PUB-AVERAGE-ANNUAL-COST`))
 
 # Creating a var to call out high and low earnings schools
 
@@ -140,21 +158,60 @@ bach_degree_school_data <- bach_degree_school_data %>% mutate(high_earnings_scho
 
 ```
 
+A
+
 ```{r}
 # Creating a var for before and after scorecard (first day of month greater or equal to september 2015)
 
 bach_degree_school_data <- bach_degree_school_data %>% mutate(after_sc = ymd(first_day_of_month) >= ymd('2015-09-01'))
 
-quantile(bach_degree_school_data$earnings,type= 9)
+
+
+
 
 ```
 
+A
+
 ```{r}
-model1 <- feols(tot~after_sc,data = bach_degree_school_data)
+
+# simple model aimed at characterizing the effect of the college scorecard in general:
+model1 <- feols(standardized_searches ~ after_sc + high_earnings_school, data = bach_degree_school_data)
+
+# model with interaction term to capture the change in interest of high earnings colleges that occurred relative to low earnings colleges after the scorecard was introduced.
+
+model2 <- feols(standardized_searches ~ after_sc + high_earnings_school + after_sc * high_earnings_school, data = bach_degree_school_data)
+
 etable(model1)
+etable(model2)
 ```
 
 ```{r}
-#(dependent) = (independent) + (control1) + (control2)
-# tot = score_card_introduced 
+# Creating a data frame to visualize aggregated search trends on a monthly basis. 
+
+monthly_searches <- bach_degree_school_data %>% group_by(first_day_of_month,high_earnings_school) %>% summarize(search_movement = mean(standardized_searches,na.rm = TRUE))
+
+# Plotting search trends for high earnings vs. low earnings schools on a monthly basis.
+
+ggplot(data = monthly_searches) + 
+  geom_point(mapping = aes(x = first_day_of_month, y = search_movement,color = high_earnings_school))
+
+```
+
+```{r}
+# Distribution of earnings amongst all schools in data set.
+
+ggplot(data = bach_degree_school_data, mapping = aes(x = earnings)) + 
+  geom_histogram(bins = 100)+
+  labs(title = "Distribution of Median Earnings")
+```
+
+```{r}
+# Searches by month
+
+ggplot(data = bach_degree_school_data, mapping = aes(x = earnings,y = avg_cost)) + 
+  geom_point() + 
+  labs(title = "Average Earnings vs. Average Cost") + xlim(0,120000)
+
+
 ```
