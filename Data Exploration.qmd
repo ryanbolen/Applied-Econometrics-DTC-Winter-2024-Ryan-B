@@ -239,7 +239,7 @@ ggplot(data = bach_degree_school_data, mapping = aes(x = earnings)) +
 It is likely that schools with higher median earnings among bachelor's degree recipients require a higher cost of tuition because they offer degrees in more rigorous and lower admission programs. For example, the Rosalind Franklin University of Medicine and Science is one of the institutions on the scorecard with the highest median earnings among students who received bachelor\'s degrees and the average enrollment there is only approximately 2,000 students (across various campuses). While admission into competitive institutions seems desirable for students who want to pursue competitive degrees, most undergrads would likely opt for enrollment into a larger/cheaper school. The scorecard provided insights similar to the one below for students seeking more widely available degrees to make more informed decisions around what they would be paying for their education.
 
 ```{r}
-# Searches by month
+# Searches by month a
 
 ggplot(data = bach_degree_school_data, mapping = aes(x = earnings,y = avg_cost)) + 
   geom_point() + 
