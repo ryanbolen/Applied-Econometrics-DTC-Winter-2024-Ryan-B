@@ -123,7 +123,7 @@ clean_data <- trends_up_to %>% inner_join(SC, join_by(opeid))
 
 **High vs. low earnings bachelor's degree granting schools:** 
 
-To investigate the research question specifically around the shift of interest to high-earnings colleges, I set a threshold for what I would consider a high earning college to be in this study. I declared that any college with earnings above the 75th percentile in earnings would be flagged as a high earnings school. Looking at the final data frame used for regression analysis, I used R to calculate the quartiles for median student earnings to determine that 48,100 is the 75th percentile value. I rounded the 75th percentile value up to 50,000, declaring that any school with median earnings 50,000 dollars or above is considered high earnings. 
+To investigate the research question specifically around the shift of interest to high-earnings colleges, I set a threshold for what I would consider a high earning college to be in this study. I declared that any college with earnings above the 75th percentile in earnings would be flagged as a high earnings school. Looking at the final data frame used for regression analysis, I used R to calculate the quartiles for median student earnings to determine that 48,100 is the 75th percentile value. I rounded the 75th percentile value up to 50,000, declaring that any school with median earnings 50,000 dollars or above is considered high earnings. The criteria of 50,000 was arbitrarily chosen in this case as a clean cutoff close to the 75th percentile threshold.
 
 ```{r}
 
@@ -166,8 +166,9 @@ bach_degree_school_data <- bach_degree_school_data %>% mutate(high_earnings_scho
 
 **Categorizing time periods:** 
 
+The final data set provides a variable to indicate whether the observation date is before or after the introduction of the college scorecard in 2015. If the first day of the month is greater than or equal to September 1st, 2015 then 'after_sc' is True (or 1).
+
 ```         
-The final data set provides a variable to indicate whether the observation date is before or after the introduction of the college scorecard in 2015. If the first day of the month is greater than or equal to September 1st, 2015 then \'after_sc\' is True (or 1).  
 ```
 
 ```{r}
@@ -181,7 +182,7 @@ bach_degree_school_data <- bach_degree_school_data %>% mutate(after_sc = ymd(fir
 
 ```
 
-**Interpretation/Answering based off regression:** 
+**Interpretation based off regression:** 
 
 **Model1**
 
@@ -197,7 +198,7 @@ Capturing the change in search interest after the scorecard was introduced for h
 
 'standardized_searches = after_sc β1 + high_earnings β2 + β3 high_earnings \* after_sc 
 
-The introduction of the College Scorecard decreased search activity on Google Trends for colleges with high-earning graduates by 3.213 standard deviations relative to what it did for colleges with low-earning graduates, with a standard error of 0.2015. This is summarized by the coefficient on the interaction term (β3) in the model where the number predicts a larger negative effect of the scorecard implementation on high earnings schools in the periods following the scorecard implementation. This is significant at the 95% confidence level.
+The introduction of the College Scorecard decreased search activity on Google Trends for colleges with high-earning graduates by 3.213 standard deviations relative to what it did for colleges with low-earning graduates, with a standard error of 0.2015. This is summarized by the coefficient on the interaction term (β3) in the model where the number predicts a larger negative effect of the scorecard implementation on high earnings schools in the periods following the scorecard implementation. This is significant at the 95% level.
 
 ```{r}
 
@@ -228,7 +229,7 @@ ggplot(data = monthly_searches) +
 
 ```
 
-Generally, most prospective students are likely to seek out lower schooling costs given the tremendously high and increasing tuition in the United States. The introduction of the college scorecard provided a way to make a greater number of comparisons to what makes a particular college appealing and allowed the population to compare similar characteristics for low cost and high-cost institutions. The improvement in transparency likely lowered interest geared towards higher cost universities (which correlate to universities with higher earnings) to universities with similar scorecard values but cheaper tuition costs. The majority of schools in this data set are on the lower end of median post-graduate earnings, and will contribute to a larger portion of search interest in the first place.
+Currently, most prospective students are likely to seek out lower schooling costs given the tremendously high and increasing tuition in the United States. The introduction of the college scorecard provided a way to make a greater number of comparisons to what makes a particular college appealing and allowed the population to compare similar characteristics for low cost and high-cost institutions. The improvement in transparency likely lowered interest geared towards higher cost universities (which correlate to universities with higher earnings) to universities with similar scorecard values but cheaper tuition costs. Otherwise, the majority of schools in this data set are on the lower end of median post-graduate earnings, and should contribute to a larger portion of searches in the first place.
 
 ```{r}
 # Distribution of earnings amongst all schools in data set.
@@ -238,7 +239,7 @@ ggplot(data = bach_degree_school_data, mapping = aes(x = earnings)) +
   labs(title = "Distribution of Median Earnings")
 ```
 
-It is likely that schools with higher median earnings among bachelor's degree recipients require a higher cost of tuition because they offer degrees in more rigorous and lower admission programs. For example, the Rosalind Franklin University of Medicine and Science is one of the institutions on the scorecard with the highest median earnings among students who received bachelor's degrees and the average enrollment there is only approximately 2,000 students (across various campuses). While admission into competitive institutions seems desirable for students who want to pursue competitive degrees, most undergrads would likely opt for enrollment into a larger/cheaper school. The scorecard provided insights similar to the one below for students seeking more widely available degrees to make more informed decisions around what they would be paying for their education.
+It is likely that schools with higher median earnings among bachelor's degree recipients require a higher cost of tuition because they offer degrees in more rigorous and lower admission programs. The scatter plot below demonstrates this relationship. For example, the Rosalind Franklin University of Medicine and Science is one of the institutions on the scorecard with the highest median earnings among students who received bachelor's degrees and the average enrollment there is only approximately 2,000 students. While admission into competitive institutions seems desirable for students who want to pursue competitive degrees, most undergrads would likely opt for enrollment into a larger/cheaper school. The scorecard provided insights similar to the one below for students seeking more widely available degrees to make more informed decisions around what they would be paying for their education.
 
 ```{r}
 # Searches by month
