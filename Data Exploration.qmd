@@ -10,8 +10,6 @@ editor: visual
 
 ## Libraries
 
-In the following code chunk, load all the libraries you will need:
-
 ```{r}
 library(tidyverse)
 library(fixest)
@@ -24,11 +22,13 @@ library(scales)
 
 **Research Question:**
 
-The College Scorecard was released at the start of September 2015. **Among colleges that predominantly grant bachelor\'s degrees**, did the release of the Scorecard shift student interest to high-earnings colleges relative to low-earnings ones (as proxied by Google searches for keywords associated with those colleges)? 
+The College Scorecard was released at the start of September 2015. **Among colleges that predominantly grant bachelor's degrees**, did the release of the Scorecard shift student interest to high-earnings colleges relative to low-earnings ones (as proxied by Google searches for keywords associated with those colleges)? 
 
 **Data:** 
 
-	Data for this project was pulled from Google Trends which measures the number of internet searches made for a particular school and the College Scorecard where different variables related to enrollment, post graduate earnings, cost of attendance etc. are available for download and analysis.  
+```         
+Data for this project was pulled from Google Trends which measures the number of internet searches made for a particular school and the College Scorecard where different variables related to enrollment, post graduate earnings, cost of attendance etc. are available for download and analysis.  
+```
 
 ```{r}
 # Getting all trends up to files in a list to pass to import/merge.
@@ -45,7 +45,7 @@ trends_up_to <- import_list(trends_up_to_list,rbind = TRUE, fill = TRUE)
 
 **Standardizing search interest and joining datasets:** 
 
-Search volumes/interest for each school were transformed into standard deviations by subtracting out the mean for the \'search index\' variable and then dividing each line by the standard deviation of the index variable. This calculation was performed for each observation and then summarized by totaling the standard deviation value for each school by name and month. Each month is reported as the first day of that given month.  
+Search volumes/interest for each school were transformed into standard deviations by subtracting out the mean for the 'search index' variable and then dividing each line by the standard deviation of the index variable. This calculation was performed for each observation and then summarized by totaling the standard deviation value for each school by name and month. Each month is reported as the first day of that given month.  
 
 ```{r}
 # Get the first ten characters out of the month or week column which at the moment is a string. 
@@ -166,7 +166,9 @@ bach_degree_school_data <- bach_degree_school_data %>% mutate(high_earnings_scho
 
 **Categorizing time periods:** 
 
-	The final data set provides a variable to indicate whether the observation date is before or after the introduction of the college scorecard in 2015. If the first day of the month is greater than or equal to September 1st, 2015 then \'after_sc\' is True (or 1).  
+```         
+The final data set provides a variable to indicate whether the observation date is before or after the introduction of the college scorecard in 2015. If the first day of the month is greater than or equal to September 1st, 2015 then \'after_sc\' is True (or 1).  
+```
 
 ```{r}
 # Creating a var for before and after scorecard (first day of month greater or equal to september 2015)
@@ -183,9 +185,9 @@ bach_degree_school_data <- bach_degree_school_data %>% mutate(after_sc = ymd(fir
 
 **Model1**
 
-I started modeling using the \'feols\' package in R with a simple design aimed at characterizing the general effect of the college scorecard on college interest in general. I used this formula to provide a baseline as to what effect the introduction of the college scorecard had overall and gain insight on what the search interest has historically been between high earnings and low earnings colleges: 
+I started modeling using the 'feols' package in R with a simple design aimed at characterizing the general effect of the college scorecard on college interest in general. I used this formula to provide a baseline as to what effect the introduction of the college scorecard had overall and gain insight on what the search interest has historically been between high earnings and low earnings colleges: 
 
-\'standardized_searches = β0 + after_sc β1 + high_earnings β2  
+'standardized_searches = β0 + after_sc β1 + high_earnings β2  
 
 Based on this regression, I determined that the introduction of the college scorecard decreased search interest for all schools by approximately 2.6 standard deviations and that high earnings colleges have slightly less search interest relative to low earnings colleges by approximately .0041 standard deviations (independent of the scorecard introduction). 
 
@@ -193,7 +195,7 @@ Based on this regression, I determined that the introduction of the college scor
 
 Capturing the change in search interest after the scorecard was introduced for high earnings schools relative to low earnings schools required extending the model to capture the interaction between the scorecard implementation and weather and whether a school is considered high earnings. I ran the following model to provide a comparison for the shift of interest between high and low schools after the college scorecard implementation date: 
 
-\'standardized_searches = after_sc β1 + high_earnings β2 + β3 high_earnings \* after_sc 
+'standardized_searches = after_sc β1 + high_earnings β2 + β3 high_earnings \* after_sc 
 
 The introduction of the College Scorecard decreased search activity on Google Trends for colleges with high-earning graduates by 3.213 standard deviations relative to what it did for colleges with low-earning graduates, with a standard error of 0.2015. This is summarized by the coefficient on the interaction term (β3) in the model where the number predicts a larger negative effect of the scorecard implementation on high earnings schools in the periods following the scorecard implementation. This is significant at the 95% confidence level.
 
@@ -236,7 +238,7 @@ ggplot(data = bach_degree_school_data, mapping = aes(x = earnings)) +
   labs(title = "Distribution of Median Earnings")
 ```
 
-It is likely that schools with higher median earnings among bachelor's degree recipients require a higher cost of tuition because they offer degrees in more rigorous and lower admission programs. For example, the Rosalind Franklin University of Medicine and Science is one of the institutions on the scorecard with the highest median earnings among students who received bachelor\'s degrees and the average enrollment there is only approximately 2,000 students (across various campuses). While admission into competitive institutions seems desirable for students who want to pursue competitive degrees, most undergrads would likely opt for enrollment into a larger/cheaper school. The scorecard provided insights similar to the one below for students seeking more widely available degrees to make more informed decisions around what they would be paying for their education.
+It is likely that schools with higher median earnings among bachelor's degree recipients require a higher cost of tuition because they offer degrees in more rigorous and lower admission programs. For example, the Rosalind Franklin University of Medicine and Science is one of the institutions on the scorecard with the highest median earnings among students who received bachelor's degrees and the average enrollment there is only approximately 2,000 students (across various campuses). While admission into competitive institutions seems desirable for students who want to pursue competitive degrees, most undergrads would likely opt for enrollment into a larger/cheaper school. The scorecard provided insights similar to the one below for students seeking more widely available degrees to make more informed decisions around what they would be paying for their education.
 
 ```{r}
 # Searches by month
